@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ consultant.company_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h2>{{ consultant.company_name }}</h2>
+      <p>{{ consultant.user.get_full_name }}{% if consultant.license_number %} · Lic# {{ consultant.license_number }}{% endif %}</p>
+    </div>
+    {% if user.is_authenticated and user.is_member %}
+      <a href="{% url 'consult_request' consultant.pk %}" class="btn btn-primary" style="border-radius:999px;">
+        💬 Request a Consultation
+      </a>
+    {% elif not user.is_authenticated %}
+      <a href="{% url 'login' %}" class="btn btn-primary" style="border-radius:999px;">
+        💬 Log In to Consult
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section">
+
+  <!-- About -->
+  {% if consultant.bio or consultant.specialization or consultant.years_experience %}
+  <div class="card mb-3">
+    <div class="card-header"><h3 style="font-family:var(--font-display); font-size:1.1rem;">About</h3></div>
+    <div class="card-body">
+      {% if consultant.specialization %}
+        <p><strong>Specialization:</strong> {{ consultant.specialization }}</p>
+      {% endif %}
+      {% if consultant.years_experience %}
+        <p><strong>Experience:</strong> {{ consultant.years_experience }} years</p>
+      {% endif %}
+      {% if consultant.bio %}
+        <p style="margin-top:.75rem; color:var(--gray-600); line-height:1.7;">{{ consultant.bio }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Life Plans -->
+  <h3 style="font-family:var(--font-display); color:var(--navy); margin-bottom:1rem;">
+    Life Insurance Plans
+  </h3>
+  {% if life_plans %}
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem; margin-bottom:2.5rem;">
+      {% for plan in life_plans %}
+        <div class="plan-card card">
+          <div class="card-body">
+            <span class="plan-type-badge badge-life">{{ plan.get_plan_type_display }}</span>
+            <h4 style="font-size:1.05rem; color:var(--navy); margin-bottom:.5rem;">{{ plan.name }}</h4>
+            <p style="color:var(--gray-600); font-size:.88rem; line-height:1.6;">{{ plan.description }}</p>
+            <hr style="border:none; border-top:1px solid var(--gray-200); margin:.75rem 0;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem; font-size:.82rem; color:var(--gray-600);">
+              <div><strong>Premium from</strong><br>₱{{ plan.premium_from|floatformat:0 }} / {{ plan.premium_period }}</div>
+              <div><strong>Coverage</strong><br>₱{{ plan.coverage_amount_min|floatformat:0 }} – ₱{{ plan.coverage_amount_max|floatformat:0 }}</div>
+              <div><strong>Age range</strong><br>{{ plan.age_min }}–{{ plan.age_max }} years</div>
+              {% if plan.term_years %}<div><strong>Term</strong><br>{{ plan.term_years }} years</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted mb-3">No life insurance plans listed yet.</p>
+  {% endif %}
+
+  <!-- Non-Life Plans -->
+  <h3 style="font-family:var(--font-display); color:var(--navy); margin-bottom:1rem;">
+    Non-Life Insurance Plans
+  </h3>
+  {% if non_life_plans %}
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem;">
+      {% for plan in non_life_plans %}
+        <div class="plan-card card">
+          <div class="card-body">
+            <span class="plan-type-badge badge-nonlife">{{ plan.get_category_display }}</span>
+            <h4 style="font-size:1.05rem; color:var(--navy); margin-bottom:.5rem;">{{ plan.name }}</h4>
+            <p style="color:var(--gray-600); font-size:.88rem; line-height:1.6;">{{ plan.description }}</p>
+            {% if plan.coverage_details %}
+              <hr style="border:none; border-top:1px solid var(--gray-200); margin:.75rem 0;">
+              <p style="font-size:.8rem; color:var(--gray-600);"><strong>Covers:</strong> {{ plan.coverage_details|truncatechars:100 }}</p>
+            {% endif %}
+            {% if plan.exclusions %}
+              <p style="font-size:.8rem; color:var(--danger); margin-top:.3rem;"><strong>Exclusions:</strong> {{ plan.exclusions|truncatechars:80 }}</p>
+            {% endif %}
+            <div class="plan-price" style="margin-top:.75rem;">
+              From <strong>₱{{ plan.premium_from|floatformat:0 }}</strong> / {{ plan.premium_period }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No non-life insurance plans listed yet.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

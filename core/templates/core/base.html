@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}[PAGE TITLE]{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">
+      [NAME]
+    </a>
+    <ul class="navbar-links">
+      <li><a href="{% url 'home' %}">Home</a></li>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'my_consultations' %}">Consultations</a></li>
+        <li style="border-left:1px solid rgba(255,255,255,.2); padding-left:1.5rem;">
+          <a href="{% url 'logout' %}" class="btn btn-primary btn-sm">Log Out</a>
+        </li>
+      {% else %}
+        <li><a href="{% url 'login' %}">Log In</a></li>
+        <li><a href="{% url 'signup_choose' %}" class="btn btn-primary btn-sm">Become a Member</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- Django Messages -->
+  {% if messages %}
+  <div class="container messages-container">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }}">
+        {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% else %}ℹ️{% endif %}
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer style="background:var(--navy); color:rgba(255,255,255,.5); text-align:center; padding:2rem 1rem; margin-top:4rem; font-size:.82rem;">
+    <p style="font-family:var(--font-display); color:rgba(255,255,255,.8); font-size:1rem; margin-bottom:.5rem;">[NAME]</p>
+    <p>[TEXT INPUT]</p>
+    <p style="margin-top:.5rem;">&copy; {% now "Y" %} [NAME]. All rights reserved.</p>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

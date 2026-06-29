@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+{% block title %}My Consultations{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h2>My Consultations</h2>
+    <p>
+      {% if role == 'member' %}Track your consultation requests with insurance consultants.
+      {% else %}Manage incoming consultation requests from potential clients.{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="container section">
+  {% if requests %}
+    <div class="consult-list">
+      {% for req in requests %}
+        <div class="consult-item">
+          <div class="consult-item-left">
+            {% if role == 'member' %}
+              <h4>{{ req.consultant.company_name }}</h4>
+              <p>{{ req.consultant.user.get_full_name }} · Interested in: {{ req.get_interested_in_display }}</p>
+            {% else %}
+              <h4>{{ req.full_name }}</h4>
+              <p>📞 {{ req.contact_number }}{% if req.email %} · ✉️ {{ req.email }}{% endif %} · {{ req.get_interested_in_display }}</p>
+            {% endif %}
+            <p style="margin-top:.3rem;">
+              <span class="status-badge status-{{ req.status }}">
+                {% if req.status == 'pending' %}⏳{% elif req.status == 'accepted' %}✅{% elif req.status == 'declined' %}❌{% else %}🏁{% endif %}
+                {{ req.get_status_display }}
+              </span>
+              <span style="font-size:.78rem; color:var(--gray-400); margin-left:.5rem;">{{ req.created_at|date:"M d, Y" }}</span>
+            </p>
+            {% if req.message %}
+              <p style="font-size:.8rem; color:var(--gray-600); margin-top:.4rem; font-style:italic;">"{{ req.message|truncatechars:100 }}"</p>
+            {% endif %}
+          </div>
+          <div class="consult-actions">
+            {% if req.status == 'accepted' or req.status == 'pending' %}
+              {% if req.conversation %}
+                <a href="{% url 'conversation_detail' req.conversation.pk %}" class="btn btn-navy btn-sm">
+                  💬 Open Chat
+                </a>
+              {% endif %}
+            {% endif %}
+
+            <!-- Consultant actions -->
+            {% if role == 'consultant' %}
+              {% if req.status == 'pending' %}
+                <a href="{% url 'update_consultation_status' req.pk 'accepted' %}" class="btn btn-success btn-sm">Accept</a>
+                <a href="{% url 'update_consultation_status' req.pk 'declined' %}" class="btn btn-danger btn-sm">Decline</a>
+              {% elif req.status == 'accepted' %}
+                <a href="{% url 'update_consultation_status' req.pk 'completed' %}" class="btn btn-ghost btn-sm">Mark Complete</a>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>
+        {% if role == 'member' %}You haven't submitted any consultation requests yet.
+        {% else %}No consultation requests yet. Once members consult you, they'll appear here.{% endif %}
+      </p>
+      {% if role == 'member' %}
+        <a href="{% url 'home' %}" class="btn btn-navy mt-2">Browse Consultants</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'core/base.html' %}
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+
+
+<!-- Consultants Section -->
+<div class="container section">
+  <h2 style="font-family:var(--font-display); color:var(--navy); font-size:1.6rem; margin-bottom:.5rem;">
+    Available Consultants
+  </h2>
+  <p class="text-muted mb-3">Connect with licensed professionals ready to help you find the right coverage.</p>
+
+  {% if consultant_data %}
+    {% for item in consultant_data %}
+      {% with c=item.profile %}
+      <div class="consultant-card">
+
+        <!-- Consultant Header -->
+        <div class="consultant-header">
+          <div class="consultant-info">
+            <div class="consultant-avatar">
+              {% if c.profile_photo %}
+                <img src="{{ c.profile_photo.url }}" alt="{{ c.company_name }}">
+              {% else %}
+                {{ c.company_name|first|upper }}
+              {% endif %}
+            </div>
+            <div class="consultant-meta">
+              <h3>{{ c.company_name }}</h3>
+              <p>
+                {{ c.user.get_full_name }}
+                {% if c.license_number %} · Lic# {{ c.license_number }}{% endif %}
+                {% if c.years_experience %} · {{ c.years_experience }}+ yrs experience{% endif %}
+              </p>
+              {% if c.specialization %}
+                <p style="margin-top:.2rem; color:var(--gold-light)">📌 {{ c.specialization }}</p>
+              {% endif %}
+            </div>
+          </div>
+          <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+            <a href="{% url 'consultant_detail' c.pk %}" class="btn btn-ghost btn-sm" style="color:white; border-color:rgba(255,255,255,.3);">
+              View Profile
+            </a>
+            {% if user.is_authenticated and user.is_member %}
+              <a href="{% url 'consult_request' c.pk %}" class="btn btn-primary btn-sm" style="border-radius:999px; padding:.4rem 1.25rem;">
+                💬 Consult
+              </a>
+            {% elif not user.is_authenticated %}
+              <a href="{% url 'login' %}?next={% url 'consult_request' c.pk %}" class="btn btn-primary btn-sm" style="border-radius:999px;">
+                💬 Consult
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Plans Grid -->
+        <div class="plans-grid">
+
+          <!-- Offerings column -->
+          <div>
+            <div class="section-label">Offerings</div>
+            {% if item.life_plans %}<p style="font-size:.85rem; color:var(--gray-600);">✅ Life Insurance Plans ({{ item.life_plans|length }})</p>{% endif %}
+            {% if item.non_life_plans %}<p style="font-size:.85rem; color:var(--gray-600);">✅ Non-Life Insurance Plans ({{ item.non_life_plans|length }})</p>{% endif %}
+            {% if c.bio %}
+              <p style="font-size:.82rem; color:var(--gray-400); margin-top:.75rem; line-height:1.6;">{{ c.bio|truncatechars:120 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Life Plans -->
+          <div>
+            <div class="section-label">Life Plans</div>
+            {% for plan in item.life_plans|slice:":3" %}
+              <div class="plan-card" style="margin-bottom:.75rem;">
+                <span class="plan-type-badge badge-life">{{ plan.get_plan_type_display }}</span>
+                <h4>{{ plan.name }}</h4>
+                <p>{{ plan.description|truncatechars:80 }}</p>
+                <div class="plan-price">
+                  From <strong>₱{{ plan.premium_from|floatformat:0 }}</strong> / {{ plan.premium_period }}
+                  · Coverage up to ₱{{ plan.coverage_amount_max|floatformat:0 }}
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-muted" style="font-size:.82rem;">No life plans listed yet.</p>
+            {% endfor %}
+          </div>
+
+          <!-- Non-Life Plans -->
+          <div>
+            <div class="section-label">Non-Life Plans</div>
+            {% for plan in item.non_life_plans|slice:":3" %}
+              <div class="plan-card" style="margin-bottom:.75rem;">
+                <span class="plan-type-badge badge-nonlife">{{ plan.get_category_display }}</span>
+                <h4>{{ plan.name }}</h4>
+                <p>{{ plan.description|truncatechars:80 }}</p>
+                <div class="plan-price">
+                  From <strong>₱{{ plan.premium_from|floatformat:0 }}</strong> / {{ plan.premium_period }}
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-muted" style="font-size:.82rem;">No non-life plans listed yet.</p>
+            {% endfor %}
+          </div>
+
+        </div><!-- /.plans-grid -->
+      </div><!-- /.consultant-card -->
+      {% endwith %}
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>No consultants available at the moment. Check back soon!</p>
+      {% if not user.is_authenticated %}
+        <a href="{% url 'consultant_signup' %}" class="btn btn-navy mt-2">Register as a Consultant</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<!-- Chat Box floating hint -->
+<div style="
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--navy); color:white;
+  border-radius: var(--radius-md);
+  padding: .75rem 1.25rem;
+  box-shadow: var(--shadow-lg);
+  font-size: .82rem;
+  max-width: 200px;
+  cursor: pointer;
+  z-index: 99;
+" onclick="this.style.display='none'">
+  💬 <strong>Have questions?</strong><br>
+  <span style="opacity:.7">Click <em>Consult</em> on any consultant card to start chatting.</span>
+</div>
+
+{% endblock %}

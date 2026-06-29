@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+{% block title %}Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  main { display: flex; flex-direction: column; }
+  footer { margin-top: 0 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:1.5rem;">
+  <div class="chat-wrapper card" style="height: calc(100vh - 130px);">
+
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div style="flex:1;">
+        {% if is_consultant %}
+          <h3>{{ consultation.full_name }}</h3>
+          <p>📞 {{ consultation.contact_number }}{% if consultation.email %} · {{ consultation.email }}{% endif %} · {{ consultation.get_interested_in_display }}</p>
+        {% else %}
+          <h3>{{ consultation.consultant.company_name }}</h3>
+          <p>{{ consultation.consultant.user.get_full_name }} · {{ consultation.get_interested_in_display }}</p>
+        {% endif %}
+      </div>
+      <div style="display:flex; align-items:center; gap:.75rem;">
+        <span class="status-badge status-{{ consultation.status }}">{{ consultation.get_status_display }}</span>
+        <a href="{% url 'my_consultations' %}" class="btn btn-ghost btn-sm">← Back</a>
+      </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+      {% if msgs %}
+        {% for msg in msgs %}
+          <div>
+            <div class="msg-bubble {% if msg.sender == request.user %}sent{% else %}received{% endif %}">
+              {{ msg.body }}
+            </div>
+            <div class="msg-meta {% if msg.sender == request.user %}text-right{% endif %}"
+                 style="{% if msg.sender == request.user %}text-align:right;{% endif %}">
+              <strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong>
+              · {{ msg.sent_at|date:"M d" }} {{ msg.sent_at|time:"H:i" }}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding: 3rem 1rem;">
+          <div class="empty-icon">💬</div>
+          <p>No messages yet. Start the conversation!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Message Input -->
+    {% if consultation.status == 'accepted' or consultation.status == 'pending' %}
+    <div class="chat-input-area">
+      <form method="post" style="display:flex; gap:.75rem; width:100%; align-items:flex-end;" id="msgForm">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit" class="btn btn-primary" style="height:42px; padding:.5rem 1.25rem; white-space:nowrap;">
+          Send →
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div style="padding:1rem 1.5rem; background:var(--gray-100); text-align:center; font-size:.85rem; color:var(--gray-400);">
+      This consultation is {{ consultation.status }}. Messaging is no longer available.
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Scroll to bottom of chat
+  const chatEl = document.getElementById('chatMessages');
+  if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+
+  // Submit on Enter (Shift+Enter for newline)
+  const msgInput = document.querySelector('textarea.msg-input');
+  if (msgInput) {
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('msgForm').submit();
+      }
+    });
+  }
+</script>
+{% endblock %}

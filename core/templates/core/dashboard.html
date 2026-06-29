@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h2>
+      {% if user.is_consultant %}🏢 Consultant Dashboard
+      {% else %}👤 Member Dashboard{% endif %}
+    </h2>
+    <p>Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+  </div>
+</div>
+
+<div class="container section">
+
+  {% if user.is_consultant %}
+  <!-- CONSULTANT DASHBOARD -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Pending Requests</div>
+      <div class="stat-value">{{ pending }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Consultations</div>
+      <div class="stat-value">{{ active }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Life Plans</div>
+      <div class="stat-value">{{ life_count }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Non-Life Plans</div>
+      <div class="stat-value">{{ nonlife_count }}</div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
+    <a href="{% url 'my_consultations' %}" class="btn btn-navy">View All Requests</a>
+    <a href="/admin/core/lifeplan/add/" class="btn btn-outline">+ Add Life Plan</a>
+    <a href="/admin/core/nonlifeplan/add/" class="btn btn-outline">+ Add Non-Life Plan</a>
+    <a href="/admin/core/consultantprofile/{{ profile.pk }}/change/" class="btn btn-ghost">✏️ Edit Profile</a>
+  </div>
+
+  {% if recent_requests %}
+  <h3 style="font-family:var(--font-display); color:var(--navy); margin-bottom:1rem;">Recent Requests</h3>
+  <div class="consult-list">
+    {% for req in recent_requests %}
+      <div class="consult-item">
+        <div class="consult-item-left">
+          <h4>{{ req.full_name }}</h4>
+          <p>📞 {{ req.contact_number }} · {{ req.get_interested_in_display }} · {{ req.created_at|date:"M d, Y" }}</p>
+          <span class="status-badge status-{{ req.status }}">{{ req.get_status_display }}</span>
+        </div>
+        <div class="consult-actions">
+          {% if req.status == 'pending' %}
+            <a href="{% url 'update_consultation_status' req.pk 'accepted' %}" class="btn btn-success btn-sm">Accept</a>
+            <a href="{% url 'update_consultation_status' req.pk 'declined' %}" class="btn btn-danger btn-sm">Decline</a>
+          {% elif req.status == 'accepted' and req.conversation %}
+            <a href="{% url 'conversation_detail' req.conversation.pk %}" class="btn btn-navy btn-sm">💬 Chat</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- MEMBER DASHBOARD -->
+  <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
+    <a href="{% url 'home' %}" class="btn btn-navy">Browse Consultants</a>
+    <a href="{% url 'my_consultations' %}" class="btn btn-outline">My Consultations</a>
+  </div>
+
+  {% if my_requests %}
+  <h3 style="font-family:var(--font-display); color:var(--navy); margin-bottom:1rem;">Recent Consultation Requests</h3>
+  <div class="consult-list mb-3">
+    {% for req in my_requests %}
+      <div class="consult-item">
+        <div class="consult-item-left">
+          <h4>{{ req.consultant.company_name }}</h4>
+          <p>{{ req.get_interested_in_display }} · {{ req.created_at|date:"M d, Y" }}</p>
+          <span class="status-badge status-{{ req.status }}">{{ req.get_status_display }}</span>
+        </div>
+        <div class="consult-actions">
+          {% if req.status == 'accepted' and req.conversation %}
+            <a href="{% url 'conversation_detail' req.conversation.pk %}" class="btn btn-navy btn-sm">💬 Chat</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if life_policies or nonlife_policies %}
+  <h3 style="font-family:var(--font-display); color:var(--navy); margin-bottom:1rem;">My Active Policies</h3>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem;">
+    {% for pol in life_policies %}
+      <div class="card">
+        <div class="card-body">
+          <span class="plan-type-badge badge-life">Life Policy</span>
+          <p style="font-size:.85rem; color:var(--navy); font-weight:600; margin-top:.5rem;">#{{ pol.policy_number }}</p>
+          <p style="font-size:.82rem; color:var(--gray-600);">{{ pol.plan.name }}</p>
+          <p style="font-size:.82rem; color:var(--gray-600);">Coverage: ₱{{ pol.coverage_amount|floatformat:0 }}</p>
+        </div>
+      </div>
+    {% endfor %}
+    {% for pol in nonlife_policies %}
+      <div class="card">
+        <div class="card-body">
+          <span class="plan-type-badge badge-nonlife">Non-Life Policy</span>
+          <p style="font-size:.85rem; color:var(--navy); font-weight:600; margin-top:.5rem;">#{{ pol.policy_number }}</p>
+          <p style="font-size:.82rem; color:var(--gray-600);">{{ pol.plan.name }}</p>
+          <p style="font-size:.82rem; color:var(--gray-600);">{{ pol.insured_item }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    {% if not my_requests %}
+    <div class="empty-state">
+      <div class="empty-icon">🛡️</div>
+      <p>Your insurance journey starts here. Browse consultants to get started.</p>
+      <a href="{% url 'home' %}" class="btn btn-navy mt-2">Find a Consultant</a>
+    </div>
+    {% endif %}
+  {% endif %}
+
+  {% endif %}
+
+</div>
+{% endblock %}

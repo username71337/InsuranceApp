@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width:600px;">
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2>Create an Account</h2>
+      <p>Choose how you'd like to join InsureLink</p>
+    </div>
+    <div class="form-body">
+      <div class="role-cards">
+        <a href="{% url 'member_signup' %}" class="role-card">
+          <div class="role-icon">👤</div>
+          <h3>Member</h3>
+          <p>Browse plans, request consultations, and manage your insurance journey.</p>
+        </a>
+        <a href="{% url 'consultant_signup' %}" class="role-card">
+          <div class="role-icon">🏢</div>
+          <h3>Consultant</h3>
+          <p>List your company's insurance plans and connect with potential clients.</p>
+        </a>
+      </div>
+      <div class="form-divider mt-2"><span>Already have an account?</span></div>
+      <a href="{% url 'login' %}" class="btn btn-outline w-full" style="justify-content:center; padding:.65rem;">
+        Log In
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
